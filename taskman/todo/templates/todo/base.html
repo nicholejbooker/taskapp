@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Task Manager{% endblock %}</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #111a2e;
+        --panel-2: #0e1628;
+        --text: #eaf0ff;
+        --muted: #a9b4d0;
+        --border: rgba(255, 255, 255, 0.08);
+        --accent: #7c5cff;
+        --danger: #ff4d6d;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(124, 92, 255, 0.35), transparent 60%),
+          radial-gradient(900px 600px at 90% 0%, rgba(0, 214, 170, 0.22), transparent 55%),
+          var(--bg);
+        color: var(--text);
+      }
+
+      a { color: inherit; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 18px 44px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 860px) {
+        .grid { grid-template-columns: 1.1fr 0.9fr; align-items: start; }
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .card .card-hd {
+        padding: 14px 14px 10px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.12);
+      }
+
+      .card .card-bd { padding: 14px; }
+
+      .row { display: grid; gap: 10px; }
+      .row-2 { grid-template-columns: 1fr 1fr; }
+      .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+      @media (max-width: 520px) {
+        .row-2, .row-3 { grid-template-columns: 1fr; }
+      }
+
+      label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+
+      input, textarea, select {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 12px;
+        outline: none;
+      }
+      select {
+        background: rgba(7, 13, 30, 0.9);
+        border-color: rgba(255, 255, 255, 0.32);
+      }
+      textarea { min-height: 92px; resize: vertical; }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(124, 92, 255, 0.18);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn:hover { border-color: rgba(124, 92, 255, 0.45); }
+      .btn.secondary { background: rgba(255, 255, 255, 0.05); }
+      .btn.danger { background: rgba(255, 77, 109, 0.12); }
+      .btn.danger:hover { border-color: rgba(255, 77, 109, 0.45); }
+      .btn.small { padding: 8px 10px; font-weight: 600; border-radius: 10px; font-size: 13px; }
+
+      .task {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 12px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.16);
+        border-radius: 14px;
+      }
+      .task.task--todo {
+        background: rgba(255, 77, 109, 0.20);
+        border-color: rgba(255, 77, 109, 0.40);
+      }
+      .task.task--done {
+        background: rgba(0, 214, 170, 0.20);
+        border-color: rgba(0, 214, 170, 0.40);
+      }
+
+      .task + .task { margin-top: 10px; }
+
+      .task .meta { display: grid; gap: 4px; }
+      .task .title { font-weight: 750; letter-spacing: -0.01em; }
+      .task .notes { color: var(--muted); font-size: 13px; white-space: pre-wrap; }
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+      .chip {
+        font-size: 12px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .chip.accent { color: rgba(255,255,255,0.92); border-color: rgba(124, 92, 255, 0.45); background: rgba(124, 92, 255, 0.12); }
+      .chip.done { color: rgba(255,255,255,0.9); border-color: rgba(0, 214, 170, 0.35); background: rgba(0, 214, 170, 0.10); }
+
+      .task .actions { display: flex; gap: 8px; align-items: center; }
+      .actions form { margin: 0; }
+
+      .subtasks {
+        list-style: none;
+        padding-left: 0;
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+        display: grid;
+        gap: 4px;
+      }
+      .subtasks li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .subtasks li.subtask--todo {
+        background: rgba(255, 77, 109, 0.12);
+        border-radius: 999px;
+        padding: 3px 8px;
+      }
+      .subtasks li.subtask--done {
+        background: rgba(0, 214, 170, 0.12);
+        border-radius: 999px;
+        padding: 3px 8px;
+      }
+      .subtasks form {
+        margin: 0;
+      }
+      .subtasks button {
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        padding: 2px 8px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      .errors {
+        margin: 10px 0 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 77, 109, 0.35);
+        background: rgba(255, 77, 109, 0.10);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <h1>Task Manager</h1>
+          <p class="subtle">A simple Django to-do list.</p>
+        </div>
+        <p class="subtle">
+          <a href="{% url 'todo:task_list' %}">List</a> ·
+          <a href="{% url 'todo:calendar' %}">Calendar</a> ·
+          <a href="/admin/">Admin</a>
+        </p>
+      </header>
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

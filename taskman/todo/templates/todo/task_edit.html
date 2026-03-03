@@ -1,0 +1,62 @@
+{% extends "todo/base.html" %}
+
+{% block title %}Edit task{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <div class="card-hd">
+      <strong>Edit task</strong>
+      <span class="subtle">— {{ task.title }}</span>
+    </div>
+    <div class="card-bd">
+      <form method="post" action="">
+        {% csrf_token %}
+
+        <div class="row">
+          <div>
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="errors">{{ form.title.errors }}</div>{% endif %}
+          </div>
+
+          <div class="row row-2">
+            <div>
+              <label for="{{ form.priority.id_for_label }}">Priority</label>
+              {{ form.priority }}
+            </div>
+            <div>
+              <label for="{{ form.due_date.id_for_label }}">Due date</label>
+              {{ form.due_date }}
+            </div>
+          </div>
+
+          <div class="row row-2">
+            <div>
+              <label for="{{ form.due_time.id_for_label }}">Time</label>
+              {{ form.due_time }}
+            </div>
+            <div>
+              <label for="{{ form.recurrence.id_for_label }}">Repeat</label>
+              {{ form.recurrence }}
+            </div>
+          </div>
+
+          <div>
+            <label for="{{ form.notes.id_for_label }}">Notes</label>
+            {{ form.notes }}
+          </div>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button class="btn" type="submit">Save</button>
+          <a class="btn secondary" href="{% url 'todo:task_list' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}
+

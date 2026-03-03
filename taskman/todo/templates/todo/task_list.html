@@ -1,0 +1,314 @@
+{% extends "todo/base.html" %}
+
+{% block title %}To-do list{% endblock %}
+
+{% block content %}
+  <div class="grid">
+    <section class="card">
+      <div class="card-hd">
+        <strong>Add a task</strong>
+      </div>
+      <div class="card-bd">
+        <form method="post" action="">
+          {% csrf_token %}
+
+          <div class="row">
+            <div>
+              <label for="{{ form.title.id_for_label }}">Title</label>
+              {{ form.title }}
+              {% if form.title.errors %}<div class="errors">{{ form.title.errors }}</div>{% endif %}
+            </div>
+
+            <div class="row row-2">
+              <div>
+                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                {{ form.priority }}
+              </div>
+              <div>
+                <label for="{{ form.due_date.id_for_label }}">Due date</label>
+                {{ form.due_date }}
+              </div>
+            </div>
+
+            <div class="row row-2">
+              <div>
+                <label for="{{ form.due_time.id_for_label }}">Time</label>
+                {{ form.due_time }}
+              </div>
+              <div>
+                <label for="{{ form.recurrence.id_for_label }}">Repeat</label>
+                {{ form.recurrence }}
+              </div>
+            </div>
+
+            <div>
+              <label for="{{ form.notes.id_for_label }}">Notes</label>
+              {{ form.notes }}
+            </div>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="errors">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button class="btn" type="submit">Add task</button>
+            <a class="btn secondary" href="">Reset</a>
+          </div>
+        </form>
+
+        {% if templates %}
+          <hr style="border:none; border-top:1px solid rgba(255,255,255,0.08); margin:16px 0;" />
+          <h4 style="margin:0 0 8px; font-size:14px;">Or quick add from template</h4>
+          <form method="post" action="">
+            {% csrf_token %}
+            <div class="row">
+              <div class="row row-2">
+                <div>
+                  <label for="template_key">Template</label>
+                  <select id="template_key" name="template_key">
+                    <option value="">Select…</option>
+                    {% for t in templates %}
+                      <option value="{{ t.key }}" data-default-items="{{ t.items|join:', ' }}">{{ t.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <!-- Extra space reserved; main submit is below items list -->
+                <div></div>
+              </div>
+
+              <div>
+                <label>Items for this task</label>
+                <div id="template-items-container" style="display:grid; gap:6px; margin-top:4px;">
+                  <!-- rows are injected with JS -->
+                </div>
+                <button type="button" class="btn small secondary" id="add-template-item" style="margin-top:6px;">
+                  + Add another item
+                </button>
+                <p class="subtle" style="margin-top:6px;">
+                  Choose a template to start with some suggested items, then add or remove items one at a time.
+                </p>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                  <button class="btn" type="submit">Add to to-do list</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <script>
+            (function () {
+              var select = document.getElementById("template_key");
+              var container = document.getElementById("template-items-container");
+              var addBtn = document.getElementById("add-template-item");
+              if (!select || !container || !addBtn) return;
+
+              function addRow(value) {
+                var row = document.createElement("div");
+                row.style.display = "flex";
+                row.style.gap = "6px";
+                row.style.alignItems = "center";
+
+                var input = document.createElement("input");
+                input.type = "text";
+                input.name = "template_items";
+                input.placeholder = "Item";
+                if (value) input.value = value;
+
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.textContent = "✕";
+                btn.style.borderRadius = "999px";
+                btn.style.border = "1px solid rgba(255,255,255,0.18)";
+                btn.style.background = "rgba(255,255,255,0.04)";
+                btn.style.color = "inherit";
+                btn.style.padding = "4px 8px";
+                btn.style.cursor = "pointer";
+                btn.addEventListener("click", function () {
+                  container.removeChild(row);
+                });
+
+                row.appendChild(input);
+                row.appendChild(btn);
+                container.appendChild(row);
+              }
+
+              function setDefaultsFromSelected() {
+                var opt = select.options[select.selectedIndex];
+                if (!opt || !opt.dataset.defaultItems) {
+                  return;
+                }
+                var raw = opt.dataset.defaultItems || "";
+                var parts = raw.split(",").map(function (p) { return p.trim(); }).filter(Boolean);
+
+                container.innerHTML = "";
+                if (parts.length === 0) {
+                  addRow("");
+                  return;
+                }
+                parts.forEach(function (p) { addRow(p); });
+              }
+
+              select.addEventListener("change", function () {
+                if (!select.value) {
+                  // When clearing selection, leave whatever rows exist.
+                  return;
+                }
+                setDefaultsFromSelected();
+              });
+
+              addBtn.addEventListener("click", function () {
+                addRow("");
+              });
+
+              // Start with one empty row so users can type even without a template.
+              addRow("");
+            })();
+          </script>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-hd">
+        <strong>To do</strong>
+        <span class="subtle">({{ tasks_todo|length }})</span>
+      </div>
+      <div class="card-bd">
+        {% if not tasks_todo %}
+          <p class="subtle" style="margin:0;">No tasks yet. Add one on the left.</p>
+        {% endif %}
+
+      {% for task in tasks_todo %}
+        <div class="task task--todo">
+            <div class="meta">
+              <div class="title">{{ task.title }}</div>
+              {% if task.notes %}
+                <div class="notes">{{ task.notes }}</div>
+              {% endif %}
+              <div class="chips">
+                <span class="chip accent">{{ task.get_priority_display }}</span>
+                {% if task.due_date %}
+                  <span class="chip">
+                    {{ task.due_date }}
+                    {% if task.due_time %} · {{ task.due_time|time:"g:i A" }}{% endif %}
+                  </span>
+                {% endif %}
+                {% if task.recurrence != task.Recurrence.NONE %}
+                  <span class="chip">Repeats {{ task.get_recurrence_display }}</span>
+                {% endif %}
+              </div>
+              {% if task.subtasks.all %}
+                <ul class="subtasks">
+                  {% for sub in task.subtasks.all %}
+                    <li class="subtask--{% if sub.is_done %}done{% else %}todo{% endif %}">
+                      <form method="post" action="{% url 'todo:subtask_toggle' sub.pk %}">
+                        {% csrf_token %}
+                        <button type="submit">
+                          {% if sub.is_done %}Undo{% else %}Done{% endif %}
+                        </button>
+                      </form>
+                      <span{% if sub.is_done %} style="text-decoration:line-through; opacity:0.8;"{% endif %}>
+                        {{ sub.label }}
+                      </span>
+                      <form method="post" action="{% url 'todo:subtask_delete' sub.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" style="margin-left:4px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.02); color:inherit; padding:2px 6px; font-size:10px; cursor:pointer;">
+                          Delete
+                        </button>
+                      </form>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div class="actions">
+              <form method="post" action="{% url 'todo:task_toggle' task.pk %}">
+                {% csrf_token %}
+                <button class="btn small secondary" type="submit">Done</button>
+              </form>
+              <a class="btn small secondary" href="{% url 'todo:task_edit' task.pk %}">Edit</a>
+              <form method="post" action="{% url 'todo:task_delete' task.pk %}">
+                {% csrf_token %}
+                <button class="btn small danger" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px;">
+    <div class="card-hd">
+      <strong>Completed</strong>
+      <span class="subtle">({{ tasks_done|length }})</span>
+    </div>
+    <div class="card-bd">
+      {% if not tasks_done %}
+        <p class="subtle" style="margin:0;">Nothing completed yet.</p>
+      {% endif %}
+
+      {% for task in tasks_done %}
+        <div class="task task--done">
+          <div class="meta">
+            <div class="title" style="text-decoration: line-through; opacity: 0.9;">{{ task.title }}</div>
+            {% if task.notes %}
+              <div class="notes">{{ task.notes }}</div>
+            {% endif %}
+            <div class="chips">
+              <span class="chip done">Done</span>
+              <span class="chip">{{ task.get_priority_display }}</span>
+              {% if task.due_date %}
+                <span class="chip">
+                  {{ task.due_date }}
+                  {% if task.due_time %} · {{ task.due_time|time:"g:i A" }}{% endif %}
+                </span>
+              {% endif %}
+              {% if task.recurrence != task.Recurrence.NONE %}
+                <span class="chip">Repeats {{ task.get_recurrence_display }}</span>
+              {% endif %}
+            </div>
+            {% if task.subtasks.all %}
+              <ul class="subtasks">
+                {% for sub in task.subtasks.all %}
+                  <li class="subtask--{% if sub.is_done %}done{% else %}todo{% endif %}">
+                    <form method="post" action="{% url 'todo:subtask_toggle' sub.pk %}">
+                      {% csrf_token %}
+                      <button type="submit">
+                        {% if sub.is_done %}Undo{% else %}Done{% endif %}
+                      </button>
+                    </form>
+                    <span{% if sub.is_done %} style="text-decoration:line-through; opacity:0.8;"{% endif %}>
+                      {{ sub.label }}
+                    </span>
+                    <form method="post" action="{% url 'todo:subtask_delete' sub.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" style="margin-left:4px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.02); color:inherit; padding:2px 6px; font-size:10px; cursor:pointer;">
+                        Delete
+                      </button>
+                    </form>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+
+          <div class="actions">
+            <form method="post" action="{% url 'todo:task_toggle' task.pk %}">
+              {% csrf_token %}
+              <button class="btn small secondary" type="submit">Undo</button>
+            </form>
+            <a class="btn small secondary" href="{% url 'todo:task_edit' task.pk %}">Edit</a>
+            <form method="post" action="{% url 'todo:task_delete' task.pk %}">
+              {% csrf_token %}
+              <button class="btn small danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}
+
