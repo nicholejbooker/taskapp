@@ -12,10 +12,9 @@ A Django-based task management app with to-do lists, templates, subtasks, recurr
 
 ## Requirements
 
-- Python 3.10+
-- Django 6.0+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 
-## Setup
+## Setup with Docker
 
 1. Clone the repository:
    ```bash
@@ -23,32 +22,28 @@ A Django-based task management app with to-do lists, templates, subtasks, recurr
    cd taskapp
    ```
 
-2. Create and activate a virtual environment:
+2. Build and run:
+   ```bash
+   docker compose up --build
+   ```
+
+3. Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
+
+Migrations run automatically on container start. The SQLite database is stored in `taskman/db.sqlite3` and persists between runs.
+
+## Setup with Python (alternative)
+
+- Python 3.10+
+- Django 6.0+
+
+1. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   # Windows:
-   venv\Scripts\activate
-   # macOS/Linux:
-   source venv/bin/activate
+   # Windows: venv\Scripts\activate
+   # macOS/Linux: source venv/bin/activate
    ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Run migrations:
-   ```bash
-   cd taskman
-   python manage.py migrate
-   ```
-
-5. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
-
-6. Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
+2. `pip install -r requirements.txt`
+3. `cd taskman && python manage.py migrate && python manage.py runserver`
 
 ## Project structure
 
@@ -57,6 +52,8 @@ taskapp/
 ├── taskman/           # Django project
 │   ├── taskman/       # Project settings
 │   └── todo/          # Todo app (models, views, templates)
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
 └── README.md
 ```
@@ -66,5 +63,9 @@ taskapp/
 Access the Django admin at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/). Create a superuser first:
 
 ```bash
-python manage.py createsuperuser
+# With Docker:
+docker compose exec web python manage.py createsuperuser
+
+# With Python/venv:
+cd taskman && python manage.py createsuperuser
 ```

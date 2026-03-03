@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./taskman:/app/taskman
+    environment:
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 0.0.0.0 web

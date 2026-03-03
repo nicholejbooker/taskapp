@@ -1,0 +1,14 @@
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+.git/
+.gitignore
+.dockerignore
+*.md
+*.sqlite3
+*.sqlite3-journal
+.idea/
+.vscode/
