@@ -7,7 +7,7 @@ A Django-based task management app with to-do lists, templates, subtasks, recurr
 - **Custom tasks** – Add tasks with title, notes, priority, due date, and time
 - **Template-based tasks** – Quick add from predefined templates (Shopping, Errands, Weekly review) with customizable item lists
 - **Subtasks** – Create sublists and mark items off individually (e.g., shopping: carrots, toilet paper, bananas)
-- **Recurring tasks** – Set tasks to repeat daily, weekly, or monthly on a specific weekday (e.g., groomer’s appointment the first Thursday of each month)
+- **Recurring tasks** – Set tasks to repeat daily, weekly, or monthly on a specific weekday (e.g., groomer's appointment the first Thursday of each month)
 - **Calendar view** – See tasks by due date in a monthly calendar
 
 ## Requirements
